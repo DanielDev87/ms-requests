@@ -1,0 +1,43 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: "ms-requests"
+
+  # --- Configuración ESTÁNDAR para Spring Boot (R2DBC) ---
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/db_requests_ms
+    username: dbeaver
+    password: 12345
+    pool:
+      enabled: true
+
+  # --- Configuración ESTÁNDAR para Spring Boot (Flyway) ---
+  flyway:
+    url: jdbc:postgresql://localhost:5432/db_requests_ms
+    user: dbeaver
+    password: 12345
+
+# --- Configuración PERSONALIZADA para el Scaffold de Bancolombia ---
+adapters:
+  r2dbc:
+    host: localhost
+    port: 5432
+    database: db_requests_ms
+    schema: public
+    username: dbeaver
+    password: 12345
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,prometheus"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+cors:
+  allowed-origins: "http://localhost:4200,http://localhost:8080"
