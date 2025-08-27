@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 public class LoanApplicationDTO {
 
     @NotNull(message = "El ID del cliente no puede ser nulo")
+    @Positive(message = "El ID del cliente debe ser un número positivo")
     private Long clientId;
 
     @NotNull(message = "El monto no puede ser nulo")
