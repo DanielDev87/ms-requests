@@ -1,5 +1,6 @@
 package co.com.bancolombia.api.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
@@ -9,8 +10,8 @@ import java.math.BigDecimal;
 public class LoanApplicationDTO {
 
     @NotNull(message = "El ID del cliente no puede ser nulo")
-    @Positive(message = "El ID del cliente debe ser un número positivo")
-    private Long clientId;
+    @NotBlank(message = "El número de documento del cliente no puede estar vacío")
+    private String documentNumber;
 
     @NotNull(message = "El monto no puede ser nulo")
     @Positive(message = "El monto debe ser un valor positivo")

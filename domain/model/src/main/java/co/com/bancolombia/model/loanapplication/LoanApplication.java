@@ -16,6 +16,7 @@ public class LoanApplication {
 
     private Long id;
     private Long clientId;
+    private String documentNumber;
     private BigDecimal amount;
     private Integer term;
     private Long loanTypeId;

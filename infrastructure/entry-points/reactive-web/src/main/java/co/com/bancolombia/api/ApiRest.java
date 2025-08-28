@@ -24,7 +24,7 @@ public class ApiRest {
 
     @PostMapping
     public Mono<ResponseEntity<LoanApplication>> createLoanApplication(@Valid @RequestBody LoanApplicationDTO loanApplicationDTO) {
-        log.info("Recibida petición para crear solicitud del cliente ID: {}", loanApplicationDTO.getClientId());
+        log.info("Recibida petición para crear solicitud del cliente ID: {}", loanApplicationDTO.getDocumentNumber());
         return createLoanApplicationUseCase.execute(toModel(loanApplicationDTO))
                 .map(savedApplication -> {
                     log.info("Solicitud creada exitosamente con ID: {}", savedApplication.getId());
@@ -35,7 +35,7 @@ public class ApiRest {
 
     private LoanApplication toModel(LoanApplicationDTO dto) {
         return LoanApplication.builder()
-                .clientId(dto.getClientId())
+                .documentNumber(dto.getDocumentNumber())
                 .amount(dto.getAmount())
                 .term(dto.getTerm())
                 .loanTypeId(dto.getLoanTypeId())

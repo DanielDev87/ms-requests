@@ -1,34 +1,26 @@
 server:
   port: 8081
-
 spring:
   application:
     name: "ms-requests"
-
-  # --- Configuración ESTÁNDAR para Spring Boot (R2DBC) ---
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/db_requests_ms
-    username: dbeaver
+    url: "r2dbc:postgresql://localhost:5432/db_requests_ms"
+    username: "dbeaver"
     password: 12345
     pool:
       enabled: true
-
-  # --- Configuración ESTÁNDAR para Spring Boot (Flyway) ---
   flyway:
-    url: jdbc:postgresql://localhost:5432/db_requests_ms
-    user: dbeaver
+    url: "jdbc:postgresql://localhost:5432/db_requests_ms"
+    user: "dbeaver"
     password: 12345
-
-# --- Configuración PERSONALIZADA para el Scaffold de Bancolombia ---
 adapters:
   r2dbc:
-    host: localhost
+    host: "localhost"
     port: 5432
-    database: db_requests_ms
-    schema: public
-    username: dbeaver
+    database: "db_requests_ms"
+    schema: "public"
+    username: "dbeaver"
     password: 12345
-
 management:
   endpoints:
     web:
@@ -38,6 +30,33 @@ management:
     health:
       probes:
         enabled: true
-
+  health:
+    circuitbreakers:
+      enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
+adapter:
+  restconsumer:
+    timeout: 5000
+    url: "http://localhost:8080/api/v1/users"
+resilience4j:
+  circuitbreaker:
+    instances:
+      testGet:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: "2s"
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 10
+        waitDurationInOpenState: "10s"
+      testPost:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: "2s"
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 10
+        waitDurationInOpenState: "10s"
