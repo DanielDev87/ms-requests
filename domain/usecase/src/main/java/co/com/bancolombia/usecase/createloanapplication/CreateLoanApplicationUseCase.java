@@ -1,10 +1,12 @@
 package co.com.bancolombia.usecase.createloanapplication;
 
 import co.com.bancolombia.model.client.gateways.ClientValidationGateway;
+import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
 import co.com.bancolombia.model.log.gateways.LoggerService;
+import co.com.bancolombia.usecase.constants.LoanUseCaseConstants;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -19,36 +21,35 @@ public class CreateLoanApplicationUseCase {
     private final LoggerService logger;
 
     public Mono<LoanApplication> execute(LoanApplication loanApplication) {
-        logger.info("Iniciando creación de solicitud para cliente con documento: {}", loanApplication.getDocumentNumber());
+        logger.info(LoanUseCaseConstants.LOG_INIT_CREATE_APP, loanApplication.getDocumentNumber());
 
-        // 1. Busca el ID del cliente usando el número de documento
-        return clientValidationGateway.findClientIdByDocumentNumber(loanApplication.getDocumentNumber())
-                .switchIfEmpty(Mono.error(new BusinessException("El cliente con el documento especificado no existe.")))
-                .flatMap(clientId -> {
-                    logger.info("Cliente encontrado con ID: {}. Asignando a la solicitud.", clientId);
-                    // 2. Asigna el ID del cliente al objeto de la solicitud
-                    loanApplication.setClientId(clientId);
+        // 1. Validar que el cliente exista y obtener su ID.
+        Mono<Long> clientIdMono = clientValidationGateway.findClientIdByDocumentNumber(loanApplication.getDocumentNumber())
+                .doOnNext(clientId -> logger.info(LoanUseCaseConstants.LOG_CLIENT_FOUND, clientId))
+                .switchIfEmpty(Mono.error(new BusinessException(LoanUseCaseConstants.ERROR_CLIENT_NOT_FOUND)));
 
-                    // 3. Continúa con la validación del tipo de préstamo
-                    return loanTypeRepository.existsById(loanApplication.getLoanTypeId())
-                            .flatMap(loanTypeExists -> {
-                                if (Boolean.FALSE.equals(loanTypeExists)) {
-                                    logger.warn("El tipo de préstamo {} no existe.", loanApplication.getLoanTypeId());
-                                    return Mono.error(new BusinessException("El tipo de préstamo especificado no existe."));
-                                }
+        // 2. Validar que el tipo de crédito exista.
+        Mono<Boolean> loanTypeExistsMono = loanTypeRepository.existsById(loanApplication.getLoanTypeId())
+                .filter(Boolean::booleanValue) // Fluirá solo si es 'true'
+                .switchIfEmpty(Mono.defer(() -> {
+                    logger.warn(LoanUseCaseConstants.LOG_LOAN_TYPE_INVALID, loanApplication.getLoanTypeId());
+                    return Mono.error(new BusinessException(LoanUseCaseConstants.ERROR_LOAN_TYPE_NOT_FOUND));
+                }));
 
-                                // 4. Si es válido, guarda la solicitud
-                                logger.info("Cliente y tipo de préstamo válidos. Guardando solicitud...");
-                                loanApplication.setStatus(LoanApplication.Status.PENDING);
-                                loanApplication.setRequestDate(LocalDate.now());
-                                return loanApplicationRepository.save(loanApplication);
-                            });
+        // 3. Ejecutar ambas validaciones y, si son exitosas, guardar la solicitud.
+        return Mono.zip(clientIdMono, loanTypeExistsMono)
+                .flatMap(tuple -> {
+                    Long clientId = tuple.getT1();
+                    logger.info(LoanUseCaseConstants.LOG_SAVING_APP);
+
+                    // Creamos una nueva instancia inmutable con los datos finales.
+                    LoanApplication applicationToSave = loanApplication.toBuilder()
+                            .clientId(clientId)
+                            .status(LoanApplication.Status.PENDING)
+                            .requestDate(LocalDate.now())
+                            .build();
+
+                    return loanApplicationRepository.save(applicationToSave);
                 });
-    }
-
-    public static class BusinessException extends RuntimeException {
-        public BusinessException(String message) {
-            super(message);
-        }
     }
 }

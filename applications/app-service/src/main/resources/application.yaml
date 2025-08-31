@@ -1,5 +1,6 @@
 server:
   port: 8081
+
 spring:
   application:
     name: "ms-requests"
@@ -13,6 +14,8 @@ spring:
     url: "jdbc:postgresql://localhost:5432/db_requests_ms"
     user: "dbeaver"
     password: 12345
+
+# --- SECCIÓN DE ADAPTADORES CONSOLIDADA ---
 adapters:
   r2dbc:
     host: "localhost"
@@ -21,6 +24,10 @@ adapters:
     schema: "public"
     username: "dbeaver"
     password: 12345
+  restconsumer:
+    timeout: 5000
+    url: "http://localhost:8080/api/v1/users"
+
 management:
   endpoints:
     web:
@@ -33,12 +40,10 @@ management:
   health:
     circuitbreakers:
       enabled: true
+
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
-adapter:
-  restconsumer:
-    timeout: 5000
-    url: "http://localhost:8080/api/v1/users"
+
 resilience4j:
   circuitbreaker:
     instances:

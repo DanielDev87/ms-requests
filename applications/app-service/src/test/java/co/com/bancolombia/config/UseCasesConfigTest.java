@@ -1,44 +1,35 @@
 package co.com.bancolombia.config;
 
+import co.com.bancolombia.model.client.gateways.ClientValidationGateway;
+import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
+import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
+import co.com.bancolombia.model.log.gateways.LoggerService;
+import co.com.bancolombia.usecase.createloanapplication.CreateLoanApplicationUseCase;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
-public class UseCasesConfigTest {
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+@SpringBootTest(classes = UseCasesConfig.class)
+class UseCasesConfigTest {
+
+    @Autowired
+    private CreateLoanApplicationUseCase createLoanApplicationUseCase;
+
+    @MockBean
+    private LoanApplicationRepository loanApplicationRepository;
+    @MockBean
+    private LoanTypeRepository loanTypeRepository;
+    @MockBean
+    private ClientValidationGateway clientValidationGateway;
+    @MockBean
+    private LoggerService loggerService;
 
     @Test
-    void testUseCaseBeansExist() {
-        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(TestConfig.class)) {
-            String[] beanNames = context.getBeanDefinitionNames();
+    void createLoanApplicationUseCaseBeanShouldBeLoaded() {
 
-            boolean useCaseBeanFound = false;
-            for (String beanName : beanNames) {
-                if (beanName.endsWith("UseCase")) {
-                    useCaseBeanFound = true;
-                    break;
-                }
-            }
-
-            assertTrue(useCaseBeanFound, "No beans ending with 'Use Case' were found");
-        }
-    }
-
-    @Configuration
-    @Import(UseCasesConfig.class)
-    static class TestConfig {
-
-        @Bean
-        public MyUseCase myUseCase() {
-            return new MyUseCase();
-        }
-    }
-
-    static class MyUseCase {
-        public String execute() {
-            return "MyUseCase Test";
-        }
+        assertNotNull(createLoanApplicationUseCase, "El bean del caso de uso no debería ser nulo");
     }
 }

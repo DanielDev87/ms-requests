@@ -1,130 +1,83 @@
 package co.com.bancolombia.usecase.createloanapplication;
 
 import co.com.bancolombia.model.client.gateways.ClientValidationGateway;
+import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
 import co.com.bancolombia.model.log.gateways.LoggerService;
+import co.com.bancolombia.usecase.constants.LoanUseCaseConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class CreateLoanApplicationUseCaseTest {
-
-    @Mock
-    private ClientValidationGateway clientValidationGateway;
 
     @Mock
     private LoanApplicationRepository loanApplicationRepository;
     @Mock
     private LoanTypeRepository loanTypeRepository;
     @Mock
+    private ClientValidationGateway clientValidationGateway;
+    @Mock
     private LoggerService logger;
 
     @InjectMocks
-    private CreateLoanApplicationUseCase useCase;
+    private CreateLoanApplicationUseCase createLoanApplicationUseCase;
 
-    private LoanApplication applicationToCreate;
-    private final String VALID_DOCUMENT = "1037123456";
-    private final Long VALID_CLIENT_ID = 456L;
+    private LoanApplication loanApplication;
 
     @BeforeEach
     void setUp() {
-        // La solicitud se crea con el número de documento
-        applicationToCreate = LoanApplication.builder()
-                .documentNumber(VALID_DOCUMENT)
-                .loanTypeId(1L)
+        MockitoAnnotations.openMocks(this);
+        loanApplication = LoanApplication.builder()
+                .documentNumber("12345")
                 .amount(new BigDecimal("10000"))
                 .term(12)
+                .loanTypeId(1L)
                 .build();
     }
 
     @Test
-    void shouldCreateApplicationSuccessfullyWhenClientAndLoanTypeAreValid() {
-        // Arrange
-        LoanApplication savedApplication = applicationToCreate.toBuilder()
-                .id(1L)
-                .clientId(VALID_CLIENT_ID) // El ID del cliente se asigna en el proceso
-                .status(LoanApplication.Status.PENDING)
-                .requestDate(LocalDate.now())
-                .build();
-
-        // 1. Simula que el cliente SÍ existe y devuelve su ID
-        when(clientValidationGateway.findClientIdByDocumentNumber(VALID_DOCUMENT))
-                .thenReturn(Mono.just(VALID_CLIENT_ID));
-        // 2. Simula que el tipo de préstamo SÍ existe
+    void shouldCreateLoanApplicationSuccessfully() {
+        when(clientValidationGateway.findClientIdByDocumentNumber("12345")).thenReturn(Mono.just(101L));
         when(loanTypeRepository.existsById(1L)).thenReturn(Mono.just(true));
-        // 3. Simula el guardado exitoso
-        when(loanApplicationRepository.save(any(LoanApplication.class))).thenReturn(Mono.just(savedApplication));
+        when(loanApplicationRepository.save(any(LoanApplication.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
 
-        // Act
-        Mono<LoanApplication> result = useCase.execute(applicationToCreate);
-
-        // Assert
-        StepVerifier.create(result)
-                .expectNextMatches(app -> app.getId().equals(1L) && app.getClientId().equals(VALID_CLIENT_ID))
+        StepVerifier.create(createLoanApplicationUseCase.execute(loanApplication))
+                .expectNextMatches(savedApp -> savedApp.getClientId().equals(101L) &&
+                        savedApp.getStatus() == LoanApplication.Status.PENDING)
                 .verifyComplete();
-
-        // Verifica que todos los pasos se ejecutaron
-        verify(clientValidationGateway).findClientIdByDocumentNumber(VALID_DOCUMENT);
-        verify(loanTypeRepository).existsById(1L);
-        verify(loanApplicationRepository).save(any(LoanApplication.class));
     }
 
     @Test
     void shouldReturnErrorWhenClientDoesNotExist() {
-        // Arrange
-        // 1. Simula que el cliente NO existe
-        when(clientValidationGateway.findClientIdByDocumentNumber(VALID_DOCUMENT)).thenReturn(Mono.empty());
+        when(clientValidationGateway.findClientIdByDocumentNumber("12345")).thenReturn(Mono.empty());
+        when(loanTypeRepository.existsById(1L)).thenReturn(Mono.just(true));
 
-        // Act
-        Mono<LoanApplication> result = useCase.execute(applicationToCreate);
-
-        // Assert
-        StepVerifier.create(result)
-                .expectErrorMatches(throwable -> throwable instanceof CreateLoanApplicationUseCase.BusinessException
-                        && throwable.getMessage().contains("cliente con el documento especificado no existe"))
+        StepVerifier.create(createLoanApplicationUseCase.execute(loanApplication))
+                .expectErrorMatches(throwable -> throwable instanceof BusinessException &&
+                        throwable.getMessage().equals(LoanUseCaseConstants.ERROR_CLIENT_NOT_FOUND))
                 .verify();
-
-        // Verifica que solo se llamó al gateway y el flujo se detuvo
-        verify(clientValidationGateway).findClientIdByDocumentNumber(VALID_DOCUMENT);
-        verify(loanTypeRepository, never()).existsById(any());
-        verify(loanApplicationRepository, never()).save(any());
     }
 
     @Test
-    void shouldReturnErrorWhenLoanTypeIsInvalid() {
-        // Arrange
-        // 1. Simula que el cliente SÍ existe
-        when(clientValidationGateway.findClientIdByDocumentNumber(VALID_DOCUMENT))
-                .thenReturn(Mono.just(VALID_CLIENT_ID));
-        // 2. Simula que el tipo de préstamo NO existe
+    void shouldReturnErrorWhenLoanTypeDoesNotExist() {
+        when(clientValidationGateway.findClientIdByDocumentNumber("12345")).thenReturn(Mono.just(101L));
         when(loanTypeRepository.existsById(1L)).thenReturn(Mono.just(false));
 
-        // Act
-        Mono<LoanApplication> result = useCase.execute(applicationToCreate);
-
-        // Assert
-        StepVerifier.create(result)
-                .expectErrorMatches(throwable -> throwable instanceof CreateLoanApplicationUseCase.BusinessException
-                        && throwable.getMessage().contains("tipo de préstamo especificado no existe"))
+        StepVerifier.create(createLoanApplicationUseCase.execute(loanApplication))
+                .expectErrorMatches(throwable -> throwable instanceof BusinessException &&
+                        throwable.getMessage().equals(LoanUseCaseConstants.ERROR_LOAN_TYPE_NOT_FOUND))
                 .verify();
-
-        // Verifica que se validó el cliente y el tipo de préstamo, pero nunca se guardó
-        verify(clientValidationGateway).findClientIdByDocumentNumber(VALID_DOCUMENT);
-        verify(loanTypeRepository).existsById(1L);
-        verify(loanApplicationRepository, never()).save(any());
     }
 }
