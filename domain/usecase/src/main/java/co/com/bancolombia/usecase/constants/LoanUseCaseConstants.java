@@ -11,6 +11,9 @@ public class LoanUseCaseConstants {
     public static final String ERROR_CLIENT_NOT_FOUND = "El cliente con el documento especificado no existe.";
     public static final String ERROR_LOAN_TYPE_NOT_FOUND = "El tipo de préstamo especificado no existe.";
 
+    public static final String ERROR_UNAUTHORIZED_CLIENT_OPERATION = "No tiene permisos para crear una solicitud para otro cliente.";
+    public static final String LOG_WARN_UNAUTHORIZED_OPERATION = "Intento de operación no autorizada: El token ({}) no corresponde al documento de la solicitud ({}).";
+
     private LoanUseCaseConstants() {
     }
 }

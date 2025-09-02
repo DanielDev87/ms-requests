@@ -8,6 +8,8 @@ import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
 import co.com.bancolombia.model.log.gateways.LoggerService;
 import co.com.bancolombia.usecase.constants.LoanUseCaseConstants;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
@@ -23,33 +25,42 @@ public class CreateLoanApplicationUseCase {
     public Mono<LoanApplication> execute(LoanApplication loanApplication) {
         logger.info(LoanUseCaseConstants.LOG_INIT_CREATE_APP, loanApplication.getDocumentNumber());
 
-        // 1. Validar que el cliente exista y obtener su ID.
-        Mono<Long> clientIdMono = clientValidationGateway.findClientIdByDocumentNumber(loanApplication.getDocumentNumber())
-                .doOnNext(clientId -> logger.info(LoanUseCaseConstants.LOG_CLIENT_FOUND, clientId))
-                .switchIfEmpty(Mono.error(new BusinessException(LoanUseCaseConstants.ERROR_CLIENT_NOT_FOUND)));
+        return ReactiveSecurityContextHolder.getContext()
+                .flatMap(securityContext -> {
+                    var auth = securityContext.getAuthentication();
+                    String tokenDocumentNumber = auth.getCredentials().toString();
 
-        // 2. Validar que el tipo de crédito exista.
-        Mono<Boolean> loanTypeExistsMono = loanTypeRepository.existsById(loanApplication.getLoanTypeId())
-                .filter(Boolean::booleanValue) // Fluirá solo si es 'true'
-                .switchIfEmpty(Mono.defer(() -> {
-                    logger.warn(LoanUseCaseConstants.LOG_LOAN_TYPE_INVALID, loanApplication.getLoanTypeId());
-                    return Mono.error(new BusinessException(LoanUseCaseConstants.ERROR_LOAN_TYPE_NOT_FOUND));
-                }));
+                    if (!tokenDocumentNumber.equals(loanApplication.getDocumentNumber())) {
+                        logger.warn(LoanUseCaseConstants.LOG_WARN_UNAUTHORIZED_OPERATION,
+                                tokenDocumentNumber, loanApplication.getDocumentNumber());
+                        return Mono.error(new BusinessException(LoanUseCaseConstants.ERROR_UNAUTHORIZED_CLIENT_OPERATION));
+                    }
 
-        // 3. Ejecutar ambas validaciones y, si son exitosas, guardar la solicitud.
-        return Mono.zip(clientIdMono, loanTypeExistsMono)
-                .flatMap(tuple -> {
-                    Long clientId = tuple.getT1();
-                    logger.info(LoanUseCaseConstants.LOG_SAVING_APP);
 
-                    // Creamos una nueva instancia inmutable con los datos finales.
-                    LoanApplication applicationToSave = loanApplication.toBuilder()
-                            .clientId(clientId)
-                            .status(LoanApplication.Status.PENDING)
-                            .requestDate(LocalDate.now())
-                            .build();
+                    Mono<Long> clientIdMono = clientValidationGateway.findClientIdByDocumentNumber(loanApplication.getDocumentNumber())
+                            .doOnNext(clientId -> logger.info(LoanUseCaseConstants.LOG_CLIENT_FOUND, clientId))
+                            .switchIfEmpty(Mono.error(new BusinessException(LoanUseCaseConstants.ERROR_CLIENT_NOT_FOUND)));
 
-                    return loanApplicationRepository.save(applicationToSave);
+                    Mono<Boolean> loanTypeExistsMono = loanTypeRepository.existsById(loanApplication.getLoanTypeId())
+                            .filter(Boolean::booleanValue)
+                            .switchIfEmpty(Mono.defer(() -> {
+                                logger.warn(LoanUseCaseConstants.LOG_LOAN_TYPE_INVALID, loanApplication.getLoanTypeId());
+                                return Mono.error(new BusinessException(LoanUseCaseConstants.ERROR_LOAN_TYPE_NOT_FOUND));
+                            }));
+
+                    return Mono.zip(clientIdMono, loanTypeExistsMono)
+                            .flatMap(tuple -> {
+                                Long clientId = tuple.getT1();
+                                logger.info(LoanUseCaseConstants.LOG_SAVING_APP);
+
+                                LoanApplication applicationToSave = loanApplication.toBuilder()
+                                        .clientId(clientId)
+                                        .status(LoanApplication.Status.PENDING)
+                                        .requestDate(LocalDate.now())
+                                        .build();
+
+                                return loanApplicationRepository.save(applicationToSave);
+                            });
                 });
     }
 }

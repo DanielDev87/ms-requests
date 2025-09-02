@@ -41,6 +41,11 @@ management:
     circuitbreakers:
       enabled: true
 
+security:
+  jwt:
+    # ES LA MISMA VARIABLE DE ENTORNO O LA MISMA CLAVE SECRETA DEL MS-AUTH
+    secret: "${JWT_SECRET:EstaEsUnaClaveSecretaDeEjemploParaElRetoPragmaConMasDe256BitsDeLongitud}"
+
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 
