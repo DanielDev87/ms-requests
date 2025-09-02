@@ -6,10 +6,9 @@ import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
 import co.com.bancolombia.model.log.gateways.LoggerService;
+import co.com.bancolombia.model.security.gateways.SecurityContextGateway;
 import co.com.bancolombia.usecase.constants.LoanUseCaseConstants;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
@@ -21,21 +20,18 @@ public class CreateLoanApplicationUseCase {
     private final LoanTypeRepository loanTypeRepository;
     private final ClientValidationGateway clientValidationGateway;
     private final LoggerService logger;
+    private final SecurityContextGateway securityContextGateway;
 
     public Mono<LoanApplication> execute(LoanApplication loanApplication) {
         logger.info(LoanUseCaseConstants.LOG_INIT_CREATE_APP, loanApplication.getDocumentNumber());
 
-        return ReactiveSecurityContextHolder.getContext()
-                .flatMap(securityContext -> {
-                    var auth = securityContext.getAuthentication();
-                    String tokenDocumentNumber = auth.getCredentials().toString();
-
+        return securityContextGateway.getAuthenticatedUserDocumentNumber()
+                .flatMap(tokenDocumentNumber -> {
                     if (!tokenDocumentNumber.equals(loanApplication.getDocumentNumber())) {
                         logger.warn(LoanUseCaseConstants.LOG_WARN_UNAUTHORIZED_OPERATION,
                                 tokenDocumentNumber, loanApplication.getDocumentNumber());
                         return Mono.error(new BusinessException(LoanUseCaseConstants.ERROR_UNAUTHORIZED_CLIENT_OPERATION));
                     }
-
 
                     Mono<Long> clientIdMono = clientValidationGateway.findClientIdByDocumentNumber(loanApplication.getDocumentNumber())
                             .doOnNext(clientId -> logger.info(LoanUseCaseConstants.LOG_CLIENT_FOUND, clientId))

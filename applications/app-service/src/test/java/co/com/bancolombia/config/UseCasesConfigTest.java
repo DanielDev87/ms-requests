@@ -4,6 +4,7 @@ import co.com.bancolombia.model.client.gateways.ClientValidationGateway;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
 import co.com.bancolombia.model.log.gateways.LoggerService;
+import co.com.bancolombia.model.security.gateways.SecurityContextGateway;
 import co.com.bancolombia.usecase.createloanapplication.CreateLoanApplicationUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,8 @@ class UseCasesConfigTest {
     private ClientValidationGateway clientValidationGateway;
     @MockBean
     private LoggerService loggerService;
+    @MockBean
+    private SecurityContextGateway securityContextGateway;
 
     @Test
     void createLoanApplicationUseCaseBeanShouldBeLoaded() {

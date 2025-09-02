@@ -20,7 +20,11 @@ import java.util.List;
 public class JwtAdapter {
 
     @Value("${security.jwt.secret}")
-    private String secret;
+    private final String secret;
+
+    public JwtAdapter(String secret) {
+        this.secret = secret;
+    }
 
     private Key getKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());

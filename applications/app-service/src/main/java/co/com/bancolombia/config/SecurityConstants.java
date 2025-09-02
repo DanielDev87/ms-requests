@@ -12,7 +12,7 @@ public final class SecurityConstants {
     };
 
     // --- Roles ---
-    public static final String ROLE_CLIENT = "ROLE_CLIENTE";
+    public static final String ROLE_CLIENT = "ROLE_CLIENT";
 
     private SecurityConstants() {
         // Prevent instantiation
