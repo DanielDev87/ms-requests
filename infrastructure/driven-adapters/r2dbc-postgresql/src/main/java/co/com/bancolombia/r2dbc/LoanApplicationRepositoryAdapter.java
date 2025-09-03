@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
-public class LoanApplicationRepositoryAdapter implements LoanApplicationRepository {
+public abstract class LoanApplicationRepositoryAdapter implements LoanApplicationRepository {
 
     private final LoanApplicationDataRepository repository;
 
