@@ -14,6 +14,9 @@ public class LoanUseCaseConstants {
     public static final String ERROR_UNAUTHORIZED_CLIENT_OPERATION = "No tiene permisos para crear una solicitud para otro cliente.";
     public static final String LOG_WARN_UNAUTHORIZED_OPERATION = "Intento de operación no autorizada: El token ({}) no corresponde al documento de la solicitud ({}).";
 
+    // --- Búsqueda ---
+    public static final String LOG_INIT_PAGINATED_SEARCH = "Iniciando búsqueda paginada de solicitudes para revisión. Página: {}, Tamaño: {}";
+
     private LoanUseCaseConstants() {
     }
 }
