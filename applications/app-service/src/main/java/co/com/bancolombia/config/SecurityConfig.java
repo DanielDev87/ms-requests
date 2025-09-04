@@ -23,7 +23,13 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers(SecurityConstants.SWAGGER_PUBLIC_PATHS).permitAll()
-                        .pathMatchers(HttpMethod.POST, SecurityConstants.LOAN_REQUESTS_PATH).hasAuthority(SecurityConstants.ROLE_CLIENT)
+                        // Regla para que CLIENTES creen solicitudes
+                        .pathMatchers(HttpMethod.POST, SecurityConstants.LOAN_REQUESTS_PATH)
+                        .hasAuthority(SecurityConstants.ROLE_CLIENT)
+                        // Regla para que ASESORES lean la lista de solicitudes
+                        .pathMatchers(HttpMethod.GET, SecurityConstants.LOAN_REQUESTS_PATH)
+                        .hasAuthority(SecurityConstants.ROLE_ADVISER)
+                        // ---------------------------------
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(authenticationWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
