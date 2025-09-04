@@ -5,6 +5,7 @@ import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationReposito
 import co.com.bancolombia.r2dbc.data.LoanApplicationData;
 import co.com.bancolombia.r2dbc.data.LoanApplicationDataRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
@@ -12,6 +13,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public abstract class LoanApplicationRepositoryAdapter implements LoanApplicationRepository {
 
+    private final DatabaseClient databaseClient;
     private final LoanApplicationDataRepository repository;
 
     @Override
