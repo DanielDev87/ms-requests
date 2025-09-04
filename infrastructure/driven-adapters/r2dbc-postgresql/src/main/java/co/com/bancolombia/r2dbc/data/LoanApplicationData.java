@@ -24,6 +24,9 @@ public class LoanApplicationData {
     @Column("client_id")
     private Long clientId;
 
+    @Column("document_number")
+    private String documentNumber;
+
     private BigDecimal amount;
     private Integer term;
 

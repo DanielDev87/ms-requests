@@ -9,13 +9,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 @RequiredArgsConstructor
 public class RestConsumerConfig {
 
-    // Ahora inyectamos el objeto de propiedades completo
     private final RestConsumerProperties properties;
 
     @Bean
     public WebClient getWebClient() {
         return WebClient.builder()
-                .baseUrl(properties.getUrl()) // Leemos la URL desde el objeto
+                .baseUrl(properties.getUrl())
                 .build();
     }
 }

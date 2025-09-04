@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
@@ -16,6 +17,8 @@ public class RouterRest {
 
     @Bean
     public RouterFunction<ServerResponse> loanApplicationRouter(Handler handler) {
-        return route(POST("/api/v1/requests"), handler::createLoanApplication);
+        return route(POST("/api/v1/requests"), handler::createLoanApplication)
+                .andRoute(GET("/api/v1/requests"), handler::getApplicationsForReview);
     }
+
 }

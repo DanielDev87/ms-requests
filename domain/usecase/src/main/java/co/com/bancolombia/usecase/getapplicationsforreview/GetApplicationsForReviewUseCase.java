@@ -1,5 +1,6 @@
 package co.com.bancolombia.usecase.getapplicationsforreview;
 
+import co.com.bancolombia.model.client.gateways.ClientValidationGateway;
 import co.com.bancolombia.model.loanapplication.LoanApplicationDetail;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.log.gateways.LoggerService;
@@ -12,11 +13,28 @@ import java.awt.print.Pageable;
 public class GetApplicationsForReviewUseCase {
 
     private final LoanApplicationRepository loanApplicationRepository;
+    private final ClientValidationGateway clientValidationGateway;
     private final LoggerService logger;
 
     public Flux<LoanApplicationDetail> execute(int page, int size) {
         logger.info(LoanUseCaseConstants.LOG_INIT_PAGINATED_SEARCH, page, size);
 
-        return loanApplicationRepository.findApplicationsForReview(page, size);
+        return loanApplicationRepository.findApplicationsForReview(page, size)
+                .flatMap(this::enrichWithClientData);
+    }
+
+    private Flux<LoanApplicationDetail> enrichWithClientData(LoanApplicationDetail application) {
+        return clientValidationGateway.findClientByDocumentNumber(application.getDocumentNumber())
+                .flatMapMany(clientData -> {
+                    LoanApplicationDetail completeDetail = application.toBuilder()
+                            .clientEmail(clientData.getEmail())
+                            .clientFullName(clientData.getFirstName() + " " + clientData.getLastName())
+                            .clientBaseSalary(clientData.getBaseSalary())
+                            // Aún no tenemos esta información, la dejamos para el final
+                            // .clientMonthlyDebt(...)
+                            .build();
+                    return Flux.just(completeDetail);
+                })
+                .switchIfEmpty(Flux.empty());
     }
 }

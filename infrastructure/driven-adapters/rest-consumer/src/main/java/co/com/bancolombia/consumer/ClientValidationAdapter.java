@@ -1,5 +1,7 @@
 package co.com.bancolombia.consumer;
 
+import co.com.bancolombia.consumer.dto.ClientData;
+import co.com.bancolombia.model.client.Client;
 import co.com.bancolombia.model.client.gateways.ClientValidationGateway;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,6 +24,15 @@ public class ClientValidationAdapter implements ClientValidationGateway {
     }
 
     @Override
+    public Mono<Client> findClientByDocumentNumber(String documentNumber) {
+        return webClient.get()
+                .uri("/api/v1/users/document/{documentNumber}", documentNumber)
+                .retrieve()
+                .bodyToMono(ClientData.class)
+                .map(this::toDomain);
+    }
+
+    @Override
     public Mono<Long> findClientIdByDocumentNumber(String documentNumber) {
         return this.webClient.get()
                 .uri("/document/{documentNumber}", documentNumber)
@@ -29,5 +40,16 @@ public class ClientValidationAdapter implements ClientValidationGateway {
                 .bodyToMono(UserDTO.class)
                 .map(UserDTO::getId)
                 .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.empty());
+    }
+
+    private Client toDomain(ClientData data) {
+        return Client.builder()
+                .id(data.getId())
+                .documentNumber(data.getDocumentNumber())
+                .firstName(data.getFirstName())
+                .lastName(data.getLastName())
+                .email(data.getEmail())
+                .baseSalary(data.getBaseSalary())
+                .build();
     }
 }
