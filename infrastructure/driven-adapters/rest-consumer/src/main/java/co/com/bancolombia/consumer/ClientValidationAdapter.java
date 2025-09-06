@@ -1,11 +1,14 @@
 package co.com.bancolombia.consumer;
 
+import co.com.bancolombia.consumer.config.RestConsumerConstants;
 import co.com.bancolombia.consumer.dto.ClientData;
 import co.com.bancolombia.model.client.Client;
 import co.com.bancolombia.model.client.gateways.ClientValidationGateway;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -13,7 +16,6 @@ public class ClientValidationAdapter implements ClientValidationGateway {
 
     private final WebClient webClient;
 
-    // The scaffold injects the configured WebClient for you
     public ClientValidationAdapter(WebClient webClient) {
         this.webClient = webClient;
     }
@@ -25,17 +27,22 @@ public class ClientValidationAdapter implements ClientValidationGateway {
 
     @Override
     public Mono<Client> findClientByDocumentNumber(String documentNumber) {
-        return webClient.get()
-                .uri("/api/v1/users/document/{documentNumber}", documentNumber)
-                .retrieve()
-                .bodyToMono(ClientData.class)
-                .map(this::toDomain);
+        return Mono.deferContextual(contextView -> {
+            ServerWebExchange exchange = contextView.get(ServerWebExchange.class);
+            String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+            return this.webClient.get()
+                    .uri(RestConsumerConstants.FIND_USER_BY_DOCUMENT_PATH, documentNumber)
+                    .header(HttpHeaders.AUTHORIZATION, authHeader)
+                    .retrieve()
+                    .bodyToMono(ClientData.class)
+                    .map(this::toDomain);
+        });
     }
 
     @Override
     public Mono<Long> findClientIdByDocumentNumber(String documentNumber) {
         return this.webClient.get()
-                .uri("/document/{documentNumber}", documentNumber)
+                .uri(RestConsumerConstants.FIND_CLIENT_ID_BY_DOCUMENT_PATH, documentNumber)
                 .retrieve()
                 .bodyToMono(UserDTO.class)
                 .map(UserDTO::getId)
