@@ -7,7 +7,7 @@ import co.com.bancolombia.model.log.gateways.LoggerService;
 import co.com.bancolombia.usecase.constants.LoanUseCaseConstants;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
-import java.awt.print.Pageable;
+import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 public class GetApplicationsForReviewUseCase {
@@ -23,18 +23,14 @@ public class GetApplicationsForReviewUseCase {
                 .flatMap(this::enrichWithClientData);
     }
 
-    private Flux<LoanApplicationDetail> enrichWithClientData(LoanApplicationDetail application) {
+    private Mono<LoanApplicationDetail> enrichWithClientData(LoanApplicationDetail application) {
         return clientValidationGateway.findClientByDocumentNumber(application.getDocumentNumber())
-                .flatMapMany(clientData -> {
-                    LoanApplicationDetail completeDetail = application.toBuilder()
-                            .clientEmail(clientData.getEmail())
-                            .clientFullName(clientData.getFirstName() + " " + clientData.getLastName())
-                            .clientBaseSalary(clientData.getBaseSalary())
-                            // Aún no tenemos esta información, la dejamos para el final
-                            // .clientMonthlyDebt(...)
-                            .build();
-                    return Flux.just(completeDetail);
-                })
-                .switchIfEmpty(Flux.empty());
+                .map(client -> application.toBuilder()
+                        .clientEmail(client.getEmail())
+                        .clientFullName(client.getFirstName() + " " + client.getLastName())
+                        .clientBaseSalary(client.getBaseSalary())
+                        .build())
+                // Si el Mono está vacío (cliente no encontrado), devuelve el objeto original
+                .defaultIfEmpty(application);
     }
 }

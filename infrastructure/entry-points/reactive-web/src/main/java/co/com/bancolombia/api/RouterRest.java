@@ -1,5 +1,6 @@
 package co.com.bancolombia.api;
 
+import co.com.bancolombia.api.constants.ApiConstants;
 import co.com.bancolombia.api.handler.Handler;
 
 import org.springframework.context.annotation.Bean;
@@ -17,8 +18,8 @@ public class RouterRest {
 
     @Bean
     public RouterFunction<ServerResponse> loanApplicationRouter(Handler handler) {
-        return route(POST("/api/v1/requests"), handler::createLoanApplication)
-                .andRoute(GET("/api/v1/requests"), handler::getApplicationsForReview);
+        return route(POST(ApiConstants.LOAN_REQUEST_PATH), handler::createLoanApplication)
+                .andRoute(GET(ApiConstants.LOAN_REQUEST_PATH), handler::getApplicationsForReview);
     }
 
 }

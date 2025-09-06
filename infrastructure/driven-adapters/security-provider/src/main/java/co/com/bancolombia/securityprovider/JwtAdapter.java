@@ -1,5 +1,6 @@
 package co.com.bancolombia.securityprovider;
 
+import co.com.bancolombia.securityprovider.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
@@ -22,8 +23,8 @@ public class JwtAdapter {
     @Value("${security.jwt.secret}")
     private final String secret;
 
-    public JwtAdapter(String secret) {
-        this.secret = secret;
+    public JwtAdapter(JwtProperties properties) {
+        this.secret = properties.getSecret();
     }
 
     private Key getKey() {
