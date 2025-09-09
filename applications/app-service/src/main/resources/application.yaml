@@ -5,20 +5,20 @@ spring:
   application:
     name: "ms-requests"
   r2dbc:
-    url: "r2dbc:postgresql://localhost:5432/db_requests_ms"
+    url: "r2dbc:postgresql://db-requests:5432/db_requests_ms"
     username: "dbeaver"
     password: 12345
     pool:
       enabled: true
   flyway:
-    url: "jdbc:postgresql://localhost:5432/db_requests_ms"
+    url: "jdbc:postgresql://db-requests:5432/db_requests_ms"
     user: "dbeaver"
     password: 12345
 
 # --- SECCIÓN DE ADAPTADORES CONSOLIDADA ---
 adapters:
   r2dbc:
-    host: "localhost"
+    host: "db-requests" #"localhost"
     port: 5432
     database: "db_requests_ms"
     schema: "public"
@@ -26,7 +26,7 @@ adapters:
     password: 12345
   restconsumer:
     timeout: 5000
-    url: "http://localhost:8080"
+    url: "http://ms-authentication:8080" #ms-authentication reemplaza a localhost
 
 management:
   endpoints:

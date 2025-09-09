@@ -1,21 +1,22 @@
 apply plugin: 'org.springframework.boot'
 
 dependencies {
-	implementation project(':security-provider')
-	implementation project(':rest-consumer')
-	implementation 'org.springframework.boot:spring-boot-starter-webflux'
-	implementation project(':reactive-web')
-	testImplementation 'org.springframework:spring-web'
-	implementation 'org.reactivecommons.utils:object-mapper:0.1.0'
-	implementation project(':r2dbc-postgresql')
-    implementation project(':model')
-    implementation project(':usecase')
+    implementation project(':infrastructure:driven-adapters:security-provider')
+    implementation project(':infrastructure:driven-adapters:rest-consumer')
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation project(':infrastructure:entry-points:reactive-web')
+    testImplementation 'org.springframework:spring-web'
+    implementation 'org.reactivecommons.utils:object-mapper:0.1.0'
+    implementation project(':infrastructure:driven-adapters:r2dbc-postgresql')
+    implementation project(':domain:model')
+    implementation project(':domain:usecase')
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    implementation project(':security-provider')
+    // Se elimina la siguiente línea por ser duplicada. Si es necesaria, descomentar y usar la ruta completa:
+    // implementation project(':infrastructure:driven-adapters:security-provider')
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     runtimeOnly('org.springframework.boot:spring-boot-devtools')
