@@ -36,7 +36,7 @@
 
     apply from: './main.gradle'
 
-    // Deshabilita la tarea validateStructure para evitar que bloquee la compilación.
+    // Deshabilitar la tarea validateStructure para evitar que bloquee la compilación.
     tasks.named('validateStructure') {
         enabled = false
     }

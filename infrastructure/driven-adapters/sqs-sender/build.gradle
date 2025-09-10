@@ -1,0 +1,9 @@
+dependencies {
+    implementation project(':domain:model')
+    implementation 'org.springframework:spring-context'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation platform('software.amazon.awssdk:bom:2.20.106')
+    implementation 'software.amazon.awssdk:sqs'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}

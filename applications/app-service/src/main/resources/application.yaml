@@ -15,10 +15,9 @@ spring:
     user: "dbeaver"
     password: 12345
 
-# --- SECCIÓN DE ADAPTADORES CONSOLIDADA ---
 adapters:
   r2dbc:
-    host: "db-requests" #"localhost"
+    host: localhost #"db-requests" #"localhost"
     port: 5432
     database: "db_requests_ms"
     schema: "public"

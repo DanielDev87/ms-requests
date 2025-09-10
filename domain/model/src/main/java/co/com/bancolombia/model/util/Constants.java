@@ -41,4 +41,12 @@ public final class Constants {
     public static final String ROLE_ADVISER = "ADVISER";
     public static final String ROLE_CLIENT = "CLIENT";
     public static final String ROLE_ADMIN = "ADMIN";
+
+    // --- Mensajes de Log para SQS Sender ---
+    public static final String SQS_LOG_SENDING_MESSAGE = "Enviando mensaje de notificación a SQS para solicitud {}";
+    public static final String SQS_LOG_MESSAGE_SENT_SUCCESS = "Mensaje enviado a SQS con éxito. MessageId: {}";
+    public static final String SQS_LOG_ERROR_SENDING_MESSAGE = "Error al enviar mensaje a SQS para solicitud {}: {}";
+    public static final String SQS_LOG_ERROR_SERIALIZING = "Error al serializar el mensaje de notificación a JSON para solicitud {}: {}";
+    public static final String SQS_ERROR_GENERAL_SEND = "Error al enviar el mensaje de notificación a SQS";
+    public static final String SQS_ERROR_SERIALIZATION = "Error serializando el mensaje de notificación a JSON";
 }
