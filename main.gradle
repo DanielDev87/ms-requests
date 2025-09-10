@@ -32,7 +32,9 @@ subprojects {
         implementation 'io.projectreactor.addons:reactor-extra'
 
         testImplementation 'io.projectreactor.tools:blockhound-junit-platform:1.0.13.RELEASE'
-
+        implementation platform('software.amazon.awssdk:bom:2.20.106')
+        implementation 'software.amazon.awssdk:sqs'
+        implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
         testImplementation 'io.projectreactor:reactor-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'

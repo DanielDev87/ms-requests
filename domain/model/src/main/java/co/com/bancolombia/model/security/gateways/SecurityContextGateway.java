@@ -4,4 +4,5 @@ import reactor.core.publisher.Mono;
 
 public interface SecurityContextGateway {
     Mono<String> getAuthenticatedUserDocumentNumber();
+    Mono<Object> getAuthenticatedUserRole();
 }

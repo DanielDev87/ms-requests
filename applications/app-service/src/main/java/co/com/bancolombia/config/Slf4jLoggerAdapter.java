@@ -20,7 +20,7 @@ public class Slf4jLoggerAdapter implements LoggerService {
     }
 
     @Override
-    public void error(String message, Throwable throwable) {
+    public void error(String message, Long id, String eMessage, Throwable throwable) {
         LOGGER.error(message, throwable);
     }
 }
