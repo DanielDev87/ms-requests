@@ -16,10 +16,10 @@ public class LoanApplication {
 
     private Long id;
     private Long clientId;
+    private Long loanTypeId;
     private String documentNumber;
     private BigDecimal amount;
     private Integer term;
-    private Long loanTypeId;
     private Status status;
     private LocalDate requestDate;
 

@@ -7,7 +7,7 @@ import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationReposito
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
 import co.com.bancolombia.model.log.gateways.LoggerService;
 import co.com.bancolombia.model.security.gateways.SecurityContextGateway;
-import co.com.bancolombia.usecase.constants.LoanUseCaseConstants;
+import co.com.bancolombia.model.util.Constants;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -23,31 +23,31 @@ public class CreateLoanApplicationUseCase {
     private final SecurityContextGateway securityContextGateway;
 
     public Mono<LoanApplication> execute(LoanApplication loanApplication) {
-        logger.info(LoanUseCaseConstants.LOG_INIT_CREATE_APP, loanApplication.getDocumentNumber());
+        logger.info(Constants.LOG_INIT_CREATE_APP, loanApplication.getDocumentNumber());
 
         return securityContextGateway.getAuthenticatedUserDocumentNumber()
                 .flatMap(tokenDocumentNumber -> {
                     if (!tokenDocumentNumber.equals(loanApplication.getDocumentNumber())) {
-                        logger.warn(LoanUseCaseConstants.LOG_WARN_UNAUTHORIZED_OPERATION,
+                        logger.warn(Constants.LOG_WARN_UNAUTHORIZED_OPERATION,
                                 tokenDocumentNumber, loanApplication.getDocumentNumber());
-                        return Mono.error(new BusinessException(LoanUseCaseConstants.ERROR_UNAUTHORIZED_CLIENT_OPERATION));
+                        return Mono.error(BusinessException.unauthorizedClientOperation(tokenDocumentNumber, loanApplication.getDocumentNumber()));
                     }
 
                     Mono<Long> clientIdMono = clientValidationGateway.findClientIdByDocumentNumber(loanApplication.getDocumentNumber())
-                            .doOnNext(clientId -> logger.info(LoanUseCaseConstants.LOG_CLIENT_FOUND, clientId))
-                            .switchIfEmpty(Mono.error(new BusinessException(LoanUseCaseConstants.ERROR_CLIENT_NOT_FOUND)));
+                            .doOnNext(clientId -> logger.info(Constants.LOG_CLIENT_FOUND, clientId))
+                            .switchIfEmpty(Mono.error(BusinessException.clientNotFound(loanApplication.getDocumentNumber())));
 
                     Mono<Boolean> loanTypeExistsMono = loanTypeRepository.existsById(loanApplication.getLoanTypeId())
                             .filter(Boolean::booleanValue)
                             .switchIfEmpty(Mono.defer(() -> {
-                                logger.warn(LoanUseCaseConstants.LOG_LOAN_TYPE_INVALID, loanApplication.getLoanTypeId());
-                                return Mono.error(new BusinessException(LoanUseCaseConstants.ERROR_LOAN_TYPE_NOT_FOUND));
+                                logger.warn(Constants.LOG_LOAN_TYPE_INVALID, loanApplication.getLoanTypeId());
+                                return Mono.error(BusinessException.loanTypeNotFound(loanApplication.getLoanTypeId()));
                             }));
 
                     return Mono.zip(clientIdMono, loanTypeExistsMono)
                             .flatMap(tuple -> {
                                 Long clientId = tuple.getT1();
-                                logger.info(LoanUseCaseConstants.LOG_SAVING_APP);
+                                logger.info(Constants.LOG_SAVING_APP);
 
                                 LoanApplication applicationToSave = loanApplication.toBuilder()
                                         .clientId(clientId)
