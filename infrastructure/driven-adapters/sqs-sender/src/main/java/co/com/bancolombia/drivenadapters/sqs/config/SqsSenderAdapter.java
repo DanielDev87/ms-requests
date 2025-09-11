@@ -27,37 +27,32 @@ public class SqsSenderAdapter implements NotificationService {
 
     @Override
     public Mono<Void> sendNotification(NotificationMessage message) {
-        return Mono.defer(() -> {
-            String messageBody;
-            try {
-                messageBody = objectMapper.writeValueAsString(message);
-            } catch (JsonProcessingException e) {
-                logger.error(Constants.SQS_LOG_ERROR_SERIALIZING, e, message.getLoanApplicationId(), e.getMessage());
-                throw new BusinessException(
-                        String.format("%s para solicitud %s", Constants.SQS_ERROR_SERIALIZATION, message.getLoanApplicationId()),
-                        Constants.NOTIFICATION_SEND_ERROR_CODE, e);
-            }
+        return Mono.fromCallable(() -> {
+                    try {
+                        return objectMapper.writeValueAsString(message);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(Constants.SQS_ERROR_SERIALIZATION, e);
+                    }
+                })
+                .flatMap(messageBody -> {
+                    logger.info(Constants.SQS_LOG_SENDING_MESSAGE, message.getLoanApplicationId());
+                    SendMessageRequest sendRequest = SendMessageRequest.builder()
+                            .queueUrl(queueUrl)
+                            .messageBody(messageBody)
+                            .build();
 
-            logger.info(Constants.SQS_LOG_SENDING_MESSAGE, message.getLoanApplicationId());
-            SendMessageRequest sendRequest = SendMessageRequest.builder()
-                    .queueUrl(queueUrl)
-                    .messageBody(messageBody)
-                    .build();
-
-            return Mono.fromFuture(sqsClient.sendMessage(sendRequest))
-                    .doOnSuccess(response -> logger.info(Constants.SQS_LOG_MESSAGE_SENT_SUCCESS, response.messageId()))
-                    .doOnError(e -> {
-                        logger.error(Constants.SQS_LOG_ERROR_SENDING_MESSAGE, (JsonProcessingException) e, message.getLoanApplicationId(), e.getMessage());
-                    })
-                    .then()
-                    .onErrorMap(e -> {
-                        if (e instanceof BusinessException) {
-                            return e;
-                        }
-                        return new BusinessException(
-                                String.format("%s para solicitud %s", Constants.SQS_ERROR_GENERAL_SEND, message.getLoanApplicationId()),
-                                Constants.NOTIFICATION_SEND_ERROR_CODE, e);
-                    });
-        });
+                    return Mono.fromFuture(sqsClient.sendMessage(sendRequest));
+                })
+                .doOnSuccess(response -> logger.info(Constants.SQS_LOG_MESSAGE_SENT_SUCCESS, response.messageId()))
+                .doOnError(e ->
+                        logger.error(Constants.SQS_LOG_ERROR_SENDING_MESSAGE, e, message.getLoanApplicationId(), e.getMessage())
+                )
+                .then()
+                .onErrorMap(e -> {
+                    if (e instanceof BusinessException) {
+                        return e;
+                    }
+                    return BusinessException.notificationSendError(Long.valueOf(message.getLoanApplicationId()), e);
+                });
     }
 }
