@@ -11,12 +11,14 @@ public final class Constants {
     public static final String UNAUTHORIZED_ROLE_CODE = "AUTH001";
     public static final String NOTIFICATION_SEND_ERROR_CODE = "NOTIF001";
     public static final String INVALID_STATUS_VALUE_CODE = "LOAN003";
+    public static final String UNAUTHORIZED_ACCESS_CODE = "AUTH001";
+    public static final String INVALID_NEW_LOAN_STATUS_CODE = "LOAN003";
+    public static final String LOAN_UPDATE_ERROR_CODE = "LOAN004";
 
     // Códigos de Error específicos para CreateLoanApplicationUseCase
     public static final String UNAUTHORIZED_CLIENT_OPERATION_CODE = "AUTH002";
     public static final String CLIENT_NOT_FOUND_CODE = "CLI001";
     public static final String LOAN_TYPE_NOT_FOUND_CODE = "LOAN005";
-
 
     // --- Mensajes de Error ---
     public static final String LOAN_NOT_FOUND_MSG = "Loan application with ID %s not found.";

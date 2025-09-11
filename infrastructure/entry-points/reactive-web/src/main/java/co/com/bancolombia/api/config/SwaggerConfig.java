@@ -1,7 +1,9 @@
 package co.com.bancolombia.api.config;
 
+import co.com.bancolombia.api.constants.ApiConstants;
 import co.com.bancolombia.api.dto.LoanApplicationDTO;
 import co.com.bancolombia.api.dto.LoanApplicationDetailDTO;
+import co.com.bancolombia.api.dto.UpdateLoanApplicationStatusRequestDTO;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -22,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+
 @Configuration
 public class SwaggerConfig {
 
@@ -29,7 +32,8 @@ public class SwaggerConfig {
     public GroupedOpenApi publicApi() {
         return GroupedOpenApi.builder()
                 .group("ms-requests")
-                .pathsToMatch("/api/v1/requests/**")
+                // Asegúrate de que pathsToMatch incluya ambas rutas ahora
+                .pathsToMatch(ApiConstants.LOAN_REQUEST_PATH + "/**", ApiConstants.LOAN_APPLICATION_STATUS_PATH.replace("/{id}", "/**"))
                 .build();
     }
 
@@ -37,64 +41,83 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("API de Solicitudes de Crédito")
-                        .version("1.0")
-                        .description("Microservicio para gestionar solicitudes de crédito.")
+                        .title(ApiConstants.SWAGGER_API_TITLE)
+                        .version(ApiConstants.SWAGGER_API_VERSION)
+                        .description(ApiConstants.SWAGGER_API_DESCRIPTION)
                 )
-                // Se añade el esquema de seguridad JWT para que Swagger lo reconozca
-                .addSecurityItem(new SecurityRequirement().addList("jwt"))
-                .path("/api/v1/requests", new io.swagger.v3.oas.models.PathItem()
-                        // --- Documentación del POST (existente, sin cambios) ---
+                .addSecurityItem(new SecurityRequirement().addList(ApiConstants.SWAGGER_SECURITY_SCHEME_NAME))
+                .path(ApiConstants.LOAN_REQUEST_PATH, new io.swagger.v3.oas.models.PathItem()
+                        // --- POST /api/v1/requests (crear) ---
                         .post(new Operation()
-                                .operationId("createLoanApplication")
-                                .tags(List.of("Loan Application"))
-                                .summary("Crear una nueva solicitud de crédito")
+                                .operationId(ApiConstants.SWAGGER_POST_OPERATION_ID)
+                                .tags(List.of(ApiConstants.SWAGGER_TAG_LOAN_APPLICATION))
+                                .summary(ApiConstants.SWAGGER_POST_SUMMARY)
                                 .requestBody(new RequestBody()
                                         .required(true)
                                         .content(new Content()
                                                 .addMediaType(org.springframework.http.MediaType.APPLICATION_JSON_VALUE,
-                                                        new MediaType().schema(new Schema<LoanApplicationDTO>().$ref("#/components/schemas/LoanApplicationDTO")))
-                                        )
+                                                        new MediaType().schema(new Schema<LoanApplicationDTO>().$ref(ApiConstants.LOAN_REF_SCHEMA_PATH + ApiConstants.SWAGGER_SCHEMA_LOAN_APP_DTO))))
                                 )
                                 .responses(new ApiResponses()
-                                        .addApiResponse("201", new ApiResponse().description("Solicitud creada exitosamente"))
-                                        .addApiResponse("400", new ApiResponse().description("Error de validación o cliente no encontrado"))
+                                        .addApiResponse("201", new ApiResponse().description(ApiConstants.SWAGGER_POST_RESP_201))
+                                        .addApiResponse("400", new ApiResponse().description(ApiConstants.SWAGGER_POST_RESP_400))
                                 )
                         )
-                        // --- AÑADIDO: Documentación del GET ---
                         .get(new Operation()
-                                .operationId("getApplicationsForReview")
-                                .tags(List.of("Loan Application"))
-                                .summary("Obtener lista de solicitudes para revisión")
+                                .operationId(ApiConstants.SWAGGER_GET_OPERATION_ID)
+                                .tags(List.of(ApiConstants.SWAGGER_TAG_LOAN_APPLICATION))
+                                .summary(ApiConstants.SWAGGER_GET_SUMMARY)
                                 .parameters(List.of(
-                                        new Parameter().in("query").name("page").description("Número de página (inicia en 0)").schema(new Schema<>().type("integer")._default(0)),
-                                        new Parameter().in("query").name("size").description("Tamaño de la página").schema(new Schema<>().type("integer")._default(10))
+                                        new Parameter().in("query").name(ApiConstants.SWAGGER_GET_PARAM_PAGE).description(ApiConstants.SWAGGER_GET_PARAM_PAGE_DESC).schema(new Schema<>().type("integer")._default(0)),
+                                        new Parameter().in("query").name(ApiConstants.SWAGGER_GET_PARAM_SIZE).description(ApiConstants.SWAGGER_GET_PARAM_SIZE_DESC).schema(new Schema<>().type("integer")._default(10))
                                 ))
                                 .responses(new ApiResponses()
                                         .addApiResponse("200", new ApiResponse()
-                                                .description("Lista de solicitudes obtenida exitosamente")
+                                                .description(ApiConstants.SWAGGER_GET_RESP_200)
                                                 .content(new Content().addMediaType(org.springframework.http.MediaType.APPLICATION_JSON_VALUE,
-                                                        new MediaType().schema(new Schema<LoanApplicationDetailDTO>().$ref("#/components/schemas/LoanApplicationDetailDTO"))))
+                                                        new MediaType().schema(new Schema<LoanApplicationDetailDTO>().$ref(ApiConstants.LOAN_REF_SCHEMA_PATH + ApiConstants.SWAGGER_SCHEMA_LOAN_APP_DETAIL_DTO))))
                                         )
-                                        .addApiResponse("401", new ApiResponse().description("No autorizado"))
-                                        .addApiResponse("403", new ApiResponse().description("Acceso denegado"))
+                                        .addApiResponse("401", new ApiResponse().description(ApiConstants.SWAGGER_GET_RESP_401))
+                                        .addApiResponse("403", new ApiResponse().description(ApiConstants.SWAGGER_GET_RESP_403))
+                                )
+                        )
+                )
+                .path(ApiConstants.LOAN_APPLICATION_STATUS_PATH, new io.swagger.v3.oas.models.PathItem()
+                        .put(new Operation()
+                                .operationId(ApiConstants.SWAGGER_PUT_OPERATION_ID)
+                                .tags(List.of(ApiConstants.SWAGGER_TAG_LOAN_APPLICATION))
+                                .summary(ApiConstants.SWAGGER_PUT_SUMMARY)
+                                .parameters(List.of(
+                                        new Parameter().in("path").name(ApiConstants.SWAGGER_PUT_PARAM_ID).description(ApiConstants.SWAGGER_PUT_PARAM_ID_DESC).required(true).schema(new Schema<>().type("integer").format("int64"))
+                                ))
+                                .requestBody(new RequestBody()
+                                        .description(ApiConstants.SWAGGER_PUT_REQ_BODY_DESC)
+                                        .required(true)
+                                        .content(new Content()
+                                                .addMediaType(org.springframework.http.MediaType.APPLICATION_JSON_VALUE,
+                                                        new MediaType().schema(new Schema<UpdateLoanApplicationStatusRequestDTO>().$ref(ApiConstants.LOAN_REF_SCHEMA_PATH + ApiConstants.SWAGGER_SCHEMA_UPDATE_LOAN_APP_STATUS_REQ_DTO))))
+                                )
+                                .responses(new ApiResponses()
+                                        .addApiResponse("200", new ApiResponse().description(ApiConstants.SWAGGER_PUT_RESP_200))
+                                        .addApiResponse("400", new ApiResponse().description(ApiConstants.SWAGGER_PUT_RESP_400_BUSINESS))
+                                        .addApiResponse("401", new ApiResponse().description(ApiConstants.SWAGGER_PUT_RESP_401))
+                                        .addApiResponse("403", new ApiResponse().description(ApiConstants.SWAGGER_PUT_RESP_403))
+                                        .addApiResponse("500", new ApiResponse().description(ApiConstants.SWAGGER_PUT_RESP_500))
                                 )
                         )
                 )
                 .components(new Components()
-                        // --- AÑADIDO: Definición del esquema de seguridad JWT ---
-                        .addSecuritySchemes("jwt", new SecurityScheme()
+                        .addSecuritySchemes(ApiConstants.SWAGGER_SECURITY_SCHEME_NAME, new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")
+                                .scheme(ApiConstants.SWAGGER_SECURITY_SCHEME_TYPE_HTTP)
+                                .bearerFormat(ApiConstants.SWAGGER_SECURITY_SCHEME_FORMAT_JWT)
                                 .in(SecurityScheme.In.HEADER)
-                                .name("Authorization")
+                                .name(ApiConstants.SWAGGER_SECURITY_SCHEME_HEADER_NAME)
                         )
-                        // --- AÑADIDO: Schema para el nuevo DTO ---
-                        .addSchemas("LoanApplicationDetailDTO", new Schema<LoanApplicationDetailDTO>().example(new LoanApplicationDetailDTO()))
-                        // Schemas existentes
-                        .addSchemas("LoanApplicationDTO", new Schema<LoanApplicationDTO>().example(new LoanApplicationDTO()))
-                        .addSchemas("LoanApplication", new Schema<LoanApplication>().example(new LoanApplication()))
+                        .addSchemas(ApiConstants.SWAGGER_SCHEMA_LOAN_APP_DETAIL_DTO, new Schema<LoanApplicationDetailDTO>().example(new LoanApplicationDetailDTO()))
+                        .addSchemas(ApiConstants.SWAGGER_SCHEMA_LOAN_APP_DTO, new Schema<LoanApplicationDTO>().example(new LoanApplicationDTO()))
+                        .addSchemas(ApiConstants.SWAGGER_SCHEMA_LOAN_APP, new Schema<LoanApplication>().example(new LoanApplication()))
+                        .addSchemas(ApiConstants.SWAGGER_SCHEMA_UPDATE_LOAN_APP_STATUS_REQ_DTO, new Schema<UpdateLoanApplicationStatusRequestDTO>().example(new UpdateLoanApplicationStatusRequestDTO()))
                 );
     }
 }
