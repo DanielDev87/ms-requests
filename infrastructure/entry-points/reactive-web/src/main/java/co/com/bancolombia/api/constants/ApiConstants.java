@@ -2,33 +2,40 @@ package co.com.bancolombia.api.constants;
 
 public final class ApiConstants {
 
+    // --- Logs de Creación de Solicitud ---
     public static final String LOG_REQUEST_RECEIVED = "Recibida petición para crear solicitud del cliente con documento: {}";
     public static final String LOG_REQUEST_CREATED = "Solicitud creada exitosamente con ID: {}";
 
-
+    // --- Mensajes de Validación DTO de UpdateStatus ---
     public static final String MESSAGE_REQUEST_ID_NULL = "El ID de la solicitud no puede ser nulo.";
     public static final String MESSAGE_REQUEST_STATE_NULL = "El nuevo estado no puede estar vacío.";
     public static final String MESSAGE_REQUEST_RESPONSE_STATE = "El estado solo puede ser 'APPROVED' o 'REJECTED'.";
 
-    // Mensajes de Log en el Handler
+    // --- Mensajes de Log en el Handler para UpdateStatus ---
     public static final String LOG_HANDLER_VALIDATION_ERROR = "Error de validación en DTO para actualizar estado: {}";
     public static final String LOG_HANDLER_UPDATE_REQUEST_RECEIVED = "Recibida solicitud para actualizar estado de préstamo ID: {} a {}";
-    public static final String LOG_HANDLER_BUSINESS_ERROR = "Error de negocio al actualizar estado de préstamo ID {}: {} - Código: {}";
-    public static final String LOG_HANDLER_UNEXPECTED_ERROR = "Error inesperado al actualizar estado de préstamo ID {}: {}";
+    public static final String LOG_HANDLER_BUSINESS_ERROR = "Error de negocio al actualizar estado de préstamo ID {}. Mensaje: {} - Código: {}";
+    public static final String LOG_HANDLER_UNEXPECTED_ERROR = "Error inesperado al actualizar estado de préstamo ID {}. Mensaje: {}";
 
-    // Mensajes de Error para el Cliente
+    // --- Mensajes de Error para el Cliente (complementan los códigos) ---
     public static final String ERROR_MESSAGE_VALIDATION = "Error de validación en la solicitud: ";
     public static final String ERROR_MESSAGE_INTERNAL = "Ocurrió un error interno al procesar la solicitud.";
 
-    // Códigos de Error
+    // --- Códigos de Error (API-specific) ---
     public static final String ERROR_CODE_VALIDATION = "VALID001";
+    public static final String ERROR_CODE_INTERNAL = "GEN001"; // <--- AÑADIDO: Código para errores internos
 
-    // Rutas de API
+    // --- Códigos de Éxito (Opcional, pero útil para consistencia si los errores tienen código) ---
+    public static final String SUCCESS_CODE_STATUS_UPDATED = "APP-STA001";
+    public static final String MESSAGE_STATUS_UPDATED = "Estado de la solicitud actualizado exitosamente.";
+
+
+    // --- Rutas de API ---
     public static final String LOAN_REQUEST_PATH = "/api/v1/requests";
-    public static final String LOAN_APPLICATION_STATUS_PATH = "/api/v1/loan-applications/{id}/status";
+    public static final String LOAN_APPLICATION_STATUS_PATH = "/api/v1/loan-applications/{id}/status"; // La ruta que ya tienes
     public static final String LOAN_REF_SCHEMA_PATH = "#/components/schemas/";
 
-    // CONSTANTES PARA SWAGGER
+    // --- CONSTANTES PARA SWAGGER (sin cambios) ---
     public static final String SWAGGER_API_TITLE = "API de Solicitudes de Crédito";
     public static final String SWAGGER_API_VERSION = "1.0";
     public static final String SWAGGER_API_DESCRIPTION = "Microservicio para gestionar solicitudes de crédito.";
