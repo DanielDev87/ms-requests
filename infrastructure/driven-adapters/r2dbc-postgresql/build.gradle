@@ -1,3 +1,8 @@
+plugins {
+    id 'java-library'
+    //id 'co.com.bancolombia.cleanArchitecture'
+}
+
 dependencies {
     implementation project(':domain:model')
     implementation 'org.springframework:spring-context'
@@ -6,6 +11,7 @@ dependencies {
     implementation 'org.postgresql:r2dbc-postgresql'
     implementation 'org.reactivecommons.utils:object-mapper-api:0.1.0'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
     testImplementation 'org.reactivecommons.utils:object-mapper:0.1.0'
 }
 

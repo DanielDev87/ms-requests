@@ -1,3 +1,12 @@
+plugins {
+    id 'java-library' // O 'java'
+    //id 'co.com.bancolombia.cleanArchitecture'
+}
+
 dependencies {
     implementation project(':domain:model')
+    implementation 'io.projectreactor:reactor-core'
 }
+
+
+

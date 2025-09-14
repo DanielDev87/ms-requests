@@ -1,3 +1,8 @@
+plugins {
+    id 'java-library'
+    //id 'co.com.bancolombia.cleanArchitecture'
+}
+
 dependencies {
     implementation project(':domain:usecase')
     implementation project(':domain:model')
@@ -7,5 +12,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0'
+    implementation 'jakarta.validation:jakarta.validation-api'
+    implementation 'org.hibernate.validator:hibernate-validator'
 }
 

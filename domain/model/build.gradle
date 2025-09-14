@@ -1,0 +1,8 @@
+plugins {
+    id 'java-library'
+    //id 'co.com.bancolombia.cleanArchitecture'
+}
+
+dependencies {
+    implementation 'io.projectreactor:reactor-core'
+}

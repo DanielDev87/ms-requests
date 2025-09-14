@@ -1,6 +1,6 @@
     buildscript {
         ext {
-            cleanArchitectureVersion = '3.24.0'
+            //cleanArchitectureVersion = '3.26.1'
             springBootVersion = '3.2.5'
             sonarVersion = '6.2.0.5505'
             jacocoVersion = '0.8.13'
@@ -10,7 +10,7 @@
     }
 
     plugins {
-        id 'co.com.bancolombia.cleanArchitecture' version "${cleanArchitectureVersion}"
+        // id 'co.com.bancolombia.cleanArchitecture' version "${cleanArchitectureVersion}"
         id 'org.springframework.boot' version "${springBootVersion}" apply false
         id 'info.solidsoft.pitest' version "${pitestVersion}" apply false
         id 'org.sonarqube' version "${sonarVersion}"
@@ -37,6 +37,6 @@
     apply from: './main.gradle'
 
     // Deshabilitar la tarea validateStructure para evitar que bloquee la compilación.
-    tasks.named('validateStructure') {
-        enabled = false
-    }
+    //tasks.named('validateStructure') {
+    //    enabled = false
+    //}
