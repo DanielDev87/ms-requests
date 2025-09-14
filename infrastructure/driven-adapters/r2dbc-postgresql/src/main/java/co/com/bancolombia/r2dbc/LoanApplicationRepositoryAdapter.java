@@ -30,6 +30,12 @@ public class LoanApplicationRepositoryAdapter implements LoanApplicationReposito
     }
 
     @Override
+    public Mono<LoanApplication> findById(Long id) {
+        return repository.findById(id)
+                .map(this::toDomain);
+    }
+
+    @Override
     public Flux<LoanApplicationDetail> findApplicationsForReview(int page, int size) {
         List<String> statuses = List.of("PENDING", "REJECTED", "MANUAL_REVIEW");
         int offset = page * size;
@@ -40,7 +46,6 @@ public class LoanApplicationRepositoryAdapter implements LoanApplicationReposito
                 .bind("size", size)
                 .bind("offset", offset)
                 .map((row, metadata) -> LoanApplicationDetail.builder()
-                        // Mapeamos solo los campos que obtenemos de la BD
                         .documentNumber(row.get("document_number", String.class))
                         .amount(row.get("amount", Double.class))
                         .term(row.get("term", Integer.class))

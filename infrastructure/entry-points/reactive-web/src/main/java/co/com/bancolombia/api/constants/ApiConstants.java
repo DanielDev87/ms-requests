@@ -23,7 +23,7 @@ public final class ApiConstants {
 
     // --- Códigos de Error (API-specific) ---
     public static final String ERROR_CODE_VALIDATION = "VALID001";
-    public static final String ERROR_CODE_INTERNAL = "GEN001"; // <--- AÑADIDO: Código para errores internos
+    public static final String ERROR_CODE_INTERNAL = "GEN001";
 
     // --- Códigos de Éxito (Opcional, pero útil para consistencia si los errores tienen código) ---
     public static final String SUCCESS_CODE_STATUS_UPDATED = "APP-STA001";
@@ -32,7 +32,7 @@ public final class ApiConstants {
 
     // --- Rutas de API ---
     public static final String LOAN_REQUEST_PATH = "/api/v1/requests";
-    public static final String LOAN_APPLICATION_STATUS_PATH = "/api/v1/loan-applications/{id}/status"; // La ruta que ya tienes
+    public static final String LOAN_APPLICATION_STATUS_PATH = "/api/v1/loan-applications/{id}/status";
     public static final String LOAN_REF_SCHEMA_PATH = "#/components/schemas/";
 
     // --- CONSTANTES PARA SWAGGER (sin cambios) ---
