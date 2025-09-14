@@ -13,4 +13,9 @@ public class SecurityContextAdapter implements SecurityContextGateway {
         return ReactiveSecurityContextHolder.getContext()
                 .map(securityContext -> securityContext.getAuthentication().getCredentials().toString());
     }
+
+    @Override
+    public Mono<String> getAuthenticatedUserRole() {
+        return Mono.just("ADVISER");
+    }
 }
