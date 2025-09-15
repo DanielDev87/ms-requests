@@ -1,0 +1,2 @@
+ALTER TABLE loan_types
+ADD COLUMN automatic_validation BOOLEAN NOT NULL DEFAULT FALSE;
