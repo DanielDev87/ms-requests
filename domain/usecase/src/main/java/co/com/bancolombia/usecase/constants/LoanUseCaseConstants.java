@@ -23,6 +23,13 @@ public class LoanUseCaseConstants {
     public static final String LOG_STATUS_UPDATED_NOTIFICATION = "Estado de solicitud {} actualizado a {}. Enviando notificación...";
     public static final String LOG_NOTIFICATION_SEND_ERROR = "Error al enviar notificación para solicitud {}: {}";
 
+    // --- Logs del Adaptador SQS ---
+    public static final String LOG_SQS_SERIALIZATION_ERROR = "Error al serializar el mensaje de validación: {}";
+    public static final String LOG_SQS_SERIALIZATION_EXCEPTION = "Error al serializar el mensaje de validación";
+    public static final String LOG_SQS_SENDING_VALIDATION_MESSAGE = "Enviando mensaje de validación a SQS para solicitud {}.";
+    public static final String LOG_SQS_VALIDATION_MESSAGE_SENT_SUCCESS = "Mensaje de validación enviado a SQS con éxito. MessageId: {}";
+    public static final String LOG_SQS_VALIDATION_MESSAGE_SEND_ERROR = "Error al enviar mensaje de validación a SQS: {}";
+    public static final String LOG_SQS_VALIDATION_MESSAGE_SEND_ERROR_FAIL = "Fallo al enviar mensaje SQS de validación";
 
     // --- Errores de Negocio ---
     public static final String ERROR_CLIENT_NOT_FOUND = "El cliente con el documento especificado no existe.";
