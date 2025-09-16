@@ -63,8 +63,7 @@ public class UpdateLoanApplicationStatusUseCase {
                                 }
 
                                 existingApplication.setStatus(newStatus);
-                                // Aquí puedo añadir campos como 'decisionDate', 'advisorId', etc. si los considero en LoanApplication
-                                // existingApplication.setDecisionDate(LocalDate.now());
+
 
                                 return loanApplicationRepository.save(existingApplication)
                                         .flatMap(updatedApplication -> {

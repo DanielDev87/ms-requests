@@ -8,6 +8,11 @@ public class LoanUseCaseConstants {
     public static final String LOG_SAVING_APP = "Validaciones completadas. Guardando solicitud...";
     public static final String LOG_WARN_UNAUTHORIZED_OPERATION = "Intento de operación no autorizada: El token ({}) no corresponde al documento de la solicitud ({}).";
 
+    // --- VALIDACIÓN AUTOMÁTICA
+    public static final String LOG_AUTO_VALIDATION_REQUIRED = "Solicitud {} (Tipo {} = {}) requiere validación automática. Encolando mensaje.";
+    public static final String LOG_AUTO_VALIDATION_NOT_REQUIRED = "Solicitud {} (Tipo {} = {}) no requiere validación automática. Finalizando.";
+    public static final String LOG_ERROR_ENQUEUING_VALIDATION_MESSAGE = "Error al encolar mensaje de validación para solicitud {}: {}";
+
 
     // --- Logs de UpdateLoanApplicationStatusUseCase ---
     public static final String LOG_UPDATE_STATUS_INIT = "Inicio de actualización de estado para solicitud ID: {}, nuevo estado: {}";

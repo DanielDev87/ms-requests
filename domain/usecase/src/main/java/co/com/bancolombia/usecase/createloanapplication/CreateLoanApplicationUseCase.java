@@ -4,10 +4,13 @@ import co.com.bancolombia.model.client.gateways.ClientValidationGateway;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
+import co.com.bancolombia.model.loantype.LoanType;
 import co.com.bancolombia.model.loantype.gateways.LoanTypeRepository;
 import co.com.bancolombia.model.log.gateways.LoggerService;
 import co.com.bancolombia.model.security.gateways.SecurityContextGateway;
-import co.com.bancolombia.model.util.Constants;
+import co.com.bancolombia.model.validation.ValidationRequestMessage;
+import co.com.bancolombia.model.validation.gateways.ValidationQueueService;
+import co.com.bancolombia.usecase.constants.LoanUseCaseConstants;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -21,33 +24,34 @@ public class CreateLoanApplicationUseCase {
     private final ClientValidationGateway clientValidationGateway;
     private final LoggerService logger;
     private final SecurityContextGateway securityContextGateway;
+    private final ValidationQueueService validationQueueService;
 
     public Mono<LoanApplication> execute(LoanApplication loanApplication) {
-        logger.info(Constants.LOG_INIT_CREATE_APP, loanApplication.getDocumentNumber());
+        logger.info(LoanUseCaseConstants.LOG_INIT_CREATE_APP, loanApplication.getDocumentNumber());
 
         return securityContextGateway.getAuthenticatedUserDocumentNumber()
                 .flatMap(tokenDocumentNumber -> {
                     if (!tokenDocumentNumber.equals(loanApplication.getDocumentNumber())) {
-                        logger.warn(Constants.LOG_WARN_UNAUTHORIZED_OPERATION,
+                        logger.warn(LoanUseCaseConstants.LOG_WARN_UNAUTHORIZED_OPERATION,
                                 tokenDocumentNumber, loanApplication.getDocumentNumber());
                         return Mono.error(BusinessException.unauthorizedClientOperation(tokenDocumentNumber, loanApplication.getDocumentNumber()));
                     }
 
-                    Mono<Long> clientIdMono = clientValidationGateway.findClientIdByDocumentNumber(loanApplication.getDocumentNumber())
-                            .doOnNext(clientId -> logger.info(Constants.LOG_CLIENT_FOUND, clientId))
-                            .switchIfEmpty(Mono.error(BusinessException.clientNotFound(loanApplication.getDocumentNumber())));
-
-                    Mono<Boolean> loanTypeExistsMono = loanTypeRepository.existsById(loanApplication.getLoanTypeId())
-                            .filter(Boolean::booleanValue)
+                    Mono<LoanType> loanTypeMono = loanTypeRepository.findById(loanApplication.getLoanTypeId())
                             .switchIfEmpty(Mono.defer(() -> {
-                                logger.warn(Constants.LOG_LOAN_TYPE_INVALID, loanApplication.getLoanTypeId());
+                                logger.warn(LoanUseCaseConstants.LOG_LOAN_TYPE_INVALID, loanApplication.getLoanTypeId());
                                 return Mono.error(BusinessException.loanTypeNotFound(loanApplication.getLoanTypeId()));
                             }));
 
-                    return Mono.zip(clientIdMono, loanTypeExistsMono)
+                    Mono<Long> clientIdMono = clientValidationGateway.findClientIdByDocumentNumber(loanApplication.getDocumentNumber())
+                            .doOnNext(clientId -> logger.info(LoanUseCaseConstants.LOG_CLIENT_FOUND, clientId))
+                            .switchIfEmpty(Mono.error(BusinessException.clientNotFound(loanApplication.getDocumentNumber())));
+
+                    return Mono.zip(clientIdMono, loanTypeMono)
                             .flatMap(tuple -> {
                                 Long clientId = tuple.getT1();
-                                logger.info(Constants.LOG_SAVING_APP);
+                                LoanType loanType = tuple.getT2();
+                                logger.info(LoanUseCaseConstants.LOG_SAVING_APP);
 
                                 LoanApplication applicationToSave = loanApplication.toBuilder()
                                         .clientId(clientId)
@@ -55,7 +59,32 @@ public class CreateLoanApplicationUseCase {
                                         .requestDate(LocalDate.now())
                                         .build();
 
-                                return loanApplicationRepository.save(applicationToSave);
+                                return loanApplicationRepository.save(applicationToSave)
+                                        .flatMap(savedApplication -> {
+                                            // Verificar validación automática
+                                            if (loanType.isAutomaticValidation()) {
+                                                logger.info(LoanUseCaseConstants.LOG_AUTO_VALIDATION_REQUIRED,
+                                                        savedApplication.getId(), loanType.getId(), loanType.getName());
+
+                                                ValidationRequestMessage validationMessage = ValidationRequestMessage.builder()
+                                                        .loanApplicationId(savedApplication.getId())
+                                                        .clientId(savedApplication.getClientId())
+                                                        .documentNumber(savedApplication.getDocumentNumber())
+                                                        .amount(savedApplication.getAmount())
+                                                        .term(savedApplication.getTerm())
+                                                        .interestRate(loanType.getInterestRate())
+                                                        .build();
+
+                                                return validationQueueService.sendValidationRequest(validationMessage)
+                                                        .thenReturn(savedApplication)
+                                                        .doOnError(e -> logger.error(LoanUseCaseConstants.LOG_ERROR_ENQUEUING_VALIDATION_MESSAGE,
+                                                                savedApplication.getId(), e.getMessage(), e));
+                                            } else {
+                                                logger.info(LoanUseCaseConstants.LOG_AUTO_VALIDATION_NOT_REQUIRED,
+                                                        savedApplication.getId(), loanType.getId(), loanType.getName());
+                                                return Mono.just(savedApplication);
+                                            }
+                                        });
                             });
                 });
     }
